@@ -1,26 +1,25 @@
-import 'package:flutter/material.dart';
-import 'core/supabase_config.dart';
-import 'core/theme.dart';
-import 'screens/splash_screen.dart';
+﻿import 'package:flutter/material.dart';
 
-Future<void> main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  await SupabaseConfig.init();
-  runApp(const SpeedApp());
+void main() {
+  runApp(const TestApp());
 }
 
-class SpeedApp extends StatelessWidget {
-  const SpeedApp({super.key});
+class TestApp extends StatelessWidget {
+  const TestApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'SPEED Car Rental',
       debugShowCheckedModeBanner: false,
-      theme: AppTheme.light,
-      locale: const Locale('ar'),
-      supportedLocales: const [Locale('ar'), Locale('en')],
-      home: const SplashScreen(),
+      home: Scaffold(
+        backgroundColor: Colors.black,
+        body: Center(
+          child: Text(
+            'SPEED TEST OK',
+            style: TextStyle(color: Colors.red, fontSize: 30),
+          ),
+        ),
+      ),
     );
   }
 }
