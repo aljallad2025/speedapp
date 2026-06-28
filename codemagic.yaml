@@ -12,6 +12,16 @@ workflows:
           if [ ! -d "android" ]; then
             flutter create --platforms=android,ios --org com.speed .
           fi
+      - name: Ensure INTERNET permission (required for release APK network access)
+        script: |
+          MANIFEST="android/app/src/main/AndroidManifest.xml"
+          if ! grep -q "android.permission.INTERNET" "$MANIFEST"; then
+            sed -i '/<manifest[^>]*>/a\    <uses-permission android:name="android.permission.INTERNET" />' "$MANIFEST"
+            echo ">>> Added INTERNET permission"
+          else
+            echo ">>> INTERNET permission already present"
+          fi
+          cat "$MANIFEST"
       - name: Get Flutter packages
         script: |
           flutter pub get
