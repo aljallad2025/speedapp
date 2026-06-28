@@ -4,36 +4,26 @@ workflows:
     max_build_duration: 60
     environment:
       flutter: stable
-      vars:
-        PACKAGE_NAME: "com.speed.carrental"
     scripts:
-      - name: Generate platform folders if missing
+      - name: Generate platform folders
         script: |
-          if [ ! -d "android" ]; then
-            flutter create --platforms=android,ios --org com.speed .
-          fi
-      - name: Ensure INTERNET permission (required for release APK network access)
+          flutter create --platforms=android --org com.speed .
+      - name: Add INTERNET permission and network security
         script: |
           MANIFEST="android/app/src/main/AndroidManifest.xml"
-          if ! grep -q "android.permission.INTERNET" "$MANIFEST"; then
-            sed -i '/<manifest[^>]*>/a\    <uses-permission android:name="android.permission.INTERNET" />' "$MANIFEST"
-            echo ">>> Added INTERNET permission"
-          else
-            echo ">>> INTERNET permission already present"
-          fi
+          grep -q "INTERNET" "$MANIFEST" || sed -i '/<manifest /a\    <uses-permission android:name="android.permission.INTERNET" />' "$MANIFEST"
+          mkdir -p android/app/src/main/res/xml
+          echo '<?xml version="1.0" encoding="utf-8"?><network-security-config><base-config cleartextTrafficPermitted="true"><trust-anchors><certificates src="system"/></trust-anchors></base-config></network-security-config>' > android/app/src/main/res/xml/network_security_config.xml
+          grep -q "networkSecurityConfig" "$MANIFEST" || sed -i 's/<application/<application android:networkSecurityConfig="@xml\/network_security_config"/' "$MANIFEST"
           cat "$MANIFEST"
       - name: Get Flutter packages
         script: |
           flutter pub get
-      - name: Analyze
-        script: |
-          flutter analyze || true
       - name: Build Android APK
         script: |
           flutter build apk --release
     artifacts:
       - build/**/outputs/**/*.apk
-      - build/**/outputs/**/*.aab
     publishing:
       email:
         recipients:
