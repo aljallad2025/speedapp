@@ -1,0 +1,29 @@
+workflows:
+  speed-android-ios:
+    name: SPEED Car Rental - Build
+    max_build_duration: 60
+    environment:
+      flutter: stable
+      vars:
+        PACKAGE_NAME: "com.speed.carrental"
+    scripts:
+      - name: Get Flutter packages
+        script: |
+          flutter pub get
+      - name: Analyze
+        script: |
+          flutter analyze || true
+      - name: Build Android APK
+        script: |
+          flutter build apk --release
+      # لبناء iOS لازم Apple Developer account + شهادات موقعة على Codemagic
+      # - name: Build iOS
+      #   script: |
+      #     flutter build ipa --release
+    artifacts:
+      - build/**/outputs/**/*.apk
+      - build/**/outputs/**/*.aab
+    publishing:
+      email:
+        recipients:
+          - your-email@example.com
