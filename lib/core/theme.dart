@@ -1,34 +1,28 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 /// SPEED Car Rental — Design System (v2)
 /// Red / Black premium branding (Sixt / Budget inspired)
 class AppColors {
   AppColors._();
 
-  // Brand core
   static const Color speedRed = Color(0xFFE30613);
   static const Color speedRedDark = Color(0xFFB10510);
   static const Color speedRedLight = Color(0xFFFF4D5A);
   static const Color speedBlack = Color(0xFF0D0D0D);
   static const Color speedBlackSoft = Color(0xFF1A1A1A);
 
-  // Neutrals
   static const Color white = Color(0xFFFFFFFF);
   static const Color greyLight = Color(0xFFF5F5F5);
   static const Color greyMedium = Color(0xFF9E9E9E);
   static const Color greyDark = Color(0xFF4A4A4A);
 
-  // Status
   static const Color success = Color(0xFF1FAA59);
   static const Color warning = Color(0xFFF5A623);
   static const Color error = Color(0xFFD32F2F);
 
-  // For-sale vs for-rent badges
   static const Color rentBadge = speedRed;
   static const Color saleBadge = Color(0xFF1A1A1A);
 
-  // --- New v2 tokens (additive, nothing above was removed) ---
   static const Color bg = Color(0xFFF7F7F9);
   static const Color surface = Color(0xFFFFFFFF);
   static const Color border = Color(0xFFE9E9EC);
@@ -100,8 +94,8 @@ class AppTheme {
     useMaterial3: true,
     scaffoldBackgroundColor: AppColors.bg,
     primaryColor: AppColors.speedRed,
-    fontFamily: GoogleFonts.cairo().fontFamily,
-    textTheme: GoogleFonts.cairoTextTheme().apply(
+    fontFamily: 'Cairo',
+    textTheme: const TextTheme().apply(
       bodyColor: AppColors.textPrimary,
       displayColor: AppColors.textPrimary,
     ),
@@ -111,16 +105,17 @@ class AppTheme {
       secondary: AppColors.speedBlack,
       surface: AppColors.surface,
     ),
-    appBarTheme: AppBarTheme(
+    appBarTheme: const AppBarTheme(
       backgroundColor: AppColors.speedBlack,
       foregroundColor: AppColors.white,
       elevation: 0,
       centerTitle: true,
-      titleTextStyle: GoogleFonts.cairo(
+      titleTextStyle: TextStyle(
         color: AppColors.white,
         fontSize: 18,
         fontWeight: FontWeight.w700,
         letterSpacing: 1.2,
+        fontFamily: 'Cairo',
       ),
     ),
     cardTheme: CardThemeData(
@@ -145,9 +140,10 @@ class AppTheme {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppRadius.md),
         ),
-        textStyle: GoogleFonts.cairo(
+        textStyle: const TextStyle(
           fontWeight: FontWeight.w700,
           fontSize: 16,
+          fontFamily: 'Cairo',
         ),
       ),
     ),
@@ -159,19 +155,19 @@ class AppTheme {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppRadius.md),
         ),
-        textStyle: GoogleFonts.cairo(fontWeight: FontWeight.w600, fontSize: 15),
+        textStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15, fontFamily: 'Cairo'),
       ),
     ),
     textButtonTheme: TextButtonThemeData(
       style: TextButton.styleFrom(
         foregroundColor: AppColors.speedRed,
-        textStyle: GoogleFonts.cairo(fontWeight: FontWeight.w600, fontSize: 14),
+        textStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14, fontFamily: 'Cairo'),
       ),
     ),
     inputDecorationTheme: InputDecorationTheme(
       filled: true,
       fillColor: AppColors.surface,
-      hintStyle: GoogleFonts.cairo(color: AppColors.greyMedium, fontSize: 14),
+      hintStyle: const TextStyle(color: AppColors.greyMedium, fontSize: 14, fontFamily: 'Cairo'),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(AppRadius.md),
         borderSide: const BorderSide(color: AppColors.border),
@@ -186,18 +182,18 @@ class AppTheme {
       ),
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
     ),
-    bottomNavigationBarTheme: BottomNavigationBarThemeData(
+    bottomNavigationBarTheme: const BottomNavigationBarThemeData(
       backgroundColor: AppColors.white,
       selectedItemColor: AppColors.speedRed,
       unselectedItemColor: AppColors.greyMedium,
       showUnselectedLabels: true,
       elevation: 0,
-      selectedLabelStyle: GoogleFonts.cairo(fontSize: 11, fontWeight: FontWeight.w600),
-      unselectedLabelStyle: GoogleFonts.cairo(fontSize: 11),
+      selectedLabelStyle: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, fontFamily: 'Cairo'),
+      unselectedLabelStyle: TextStyle(fontSize: 11, fontFamily: 'Cairo'),
     ),
     snackBarTheme: SnackBarThemeData(
       backgroundColor: AppColors.speedBlack,
-      contentTextStyle: GoogleFonts.cairo(color: AppColors.white, fontSize: 13),
+      contentTextStyle: const TextStyle(color: AppColors.white, fontSize: 13, fontFamily: 'Cairo'),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(AppRadius.sm),
       ),
