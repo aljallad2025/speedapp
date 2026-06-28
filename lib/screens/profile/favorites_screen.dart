@@ -30,13 +30,13 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
   }
 
   Future<void> _load() async {
-    final userId = _authService.currentUser?.id;
-    if (userId == null) {
+    final customerId = await _authService.getCurrentCustomerId();
+    if (customerId == null) {
       setState(() => _loading = false);
       return;
     }
     try {
-      final favIds = await _favoriteService.getFavoriteCarIds(userId);
+      final favIds = await _favoriteService.getFavoriteCarIds(customerId);
       final allCars = await _carService.getCars();
       setState(() {
         _cars = allCars.where((c) => favIds.contains(c.id)).toList();

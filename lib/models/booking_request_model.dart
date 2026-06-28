@@ -1,10 +1,9 @@
-/// ⚠️ هذا جدول جديد `booking_requests` - لازم ننشئه بـ migration (موجود SQL بالـ README)
-/// الفكرة: الحجز من الموبايل يدخل كـ "طلب" بس، والموظف بالـ ERP يراجعه
-/// ويحوّله لعقد إيجار فعلي (نفس مبدأ Quotation -> Convert to Invoice الموجود بالنظام)
+/// طلب حجز من الموبايل - الموظف بالـ ERP يراجعه ويحوّله لعقد فعلي
+/// (نفس مبدأ Quotation -> Convert to Invoice)
 class BookingRequestModel {
   final String? id;
   final String carId;
-  final String userId;
+  final String customerId;
   final DateTime startDate;
   final DateTime endDate;
   final String status; // pending | confirmed | rejected | converted
@@ -14,7 +13,7 @@ class BookingRequestModel {
   BookingRequestModel({
     this.id,
     required this.carId,
-    required this.userId,
+    required this.customerId,
     required this.startDate,
     required this.endDate,
     this.status = 'pending',
@@ -24,7 +23,7 @@ class BookingRequestModel {
 
   Map<String, dynamic> toInsertJson() => {
         'car_id': carId,
-        'user_id': userId,
+        'customer_id': customerId,
         'start_date': startDate.toIso8601String(),
         'end_date': endDate.toIso8601String(),
         'status': status,
@@ -35,7 +34,7 @@ class BookingRequestModel {
     return BookingRequestModel(
       id: json['id'].toString(),
       carId: json['car_id'].toString(),
-      userId: json['user_id'].toString(),
+      customerId: json['customer_id'].toString(),
       startDate: DateTime.parse(json['start_date']),
       endDate: DateTime.parse(json['end_date']),
       status: json['status'] ?? 'pending',

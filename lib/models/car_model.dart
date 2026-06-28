@@ -1,9 +1,4 @@
-/// Car model
-///
-/// ⚠️ ملاحظة مهمة: أسماء الحقول هنا افتراضية بناءً على المنطق العام.
-/// لازم نتأكد منها على جدول `cars` الحقيقي بالـ ERP (نتيجة \d cars بالـ psql)
-/// قبل التوصيل النهائي، عشان نطابق أسماء الأعمدة 100% (نفس مبدأ
-/// account_code بالمصاريف بالـ ERP - دقة الأعمدة أساسية).
+/// Car model - مبني على الـ schema الحقيقي بجدول `cars`
 class CarModel {
   final String id;
   final String make;
@@ -12,6 +7,7 @@ class CarModel {
   final String? plateNumber;
   final List<String> images;
 
+  /// مشتق من عمود `category` الحقيقي (قيمته 'rental' أو 'sale' حالياً)
   /// 'rent' | 'sale' | 'both'
   final String listingType;
 
@@ -19,7 +15,10 @@ class CarModel {
   final double? salePrice;
 
   final bool isAvailable;
-  final String? category; // Economy / SUV / Luxury ...
+
+  /// منطقة السيارة (عمود location الحقيقي - مثلاً 'amwaj')
+  final String? location;
+
   final String? transmission;
   final String? fuelType;
   final int? seats;
@@ -36,7 +35,7 @@ class CarModel {
     this.dailyRate,
     this.salePrice,
     this.isAvailable = true,
-    this.category,
+    this.location,
     this.transmission,
     this.fuelType,
     this.seats,
@@ -47,6 +46,13 @@ class CarModel {
   bool get isForSale => listingType == 'sale' || listingType == 'both';
 
   String get displayName => '$make $model $year';
+
+  static String _deriveListingType(dynamic rawCategory) {
+    final v = (rawCategory ?? '').toString().toLowerCase();
+    if (v.contains('sale')) return 'sale';
+    if (v.contains('both')) return 'both';
+    return 'rent';
+  }
 
   factory CarModel.fromJson(Map<String, dynamic> json) {
     final imageUrl = json['image_url'];
@@ -61,11 +67,11 @@ class CarModel {
       images: (imageUrl != null && imageUrl.toString().isNotEmpty)
           ? [imageUrl.toString()]
           : const [],
-      listingType: json['listing_type'] ?? 'rent',
+      listingType: _deriveListingType(json['category']),
       dailyRate: (json['daily_rate'])?.toDouble(),
       salePrice: (json['sale_price'])?.toDouble(),
       isAvailable: json['status'] == null || json['status'] == 'available',
-      category: json['category'],
+      location: json['location'],
       transmission: json['transmission'],
       fuelType: json['fuel_type'],
       seats: json['seats'],

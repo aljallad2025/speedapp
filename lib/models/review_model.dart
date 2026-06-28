@@ -1,7 +1,7 @@
 class ReviewModel {
   final String id;
   final String carId;
-  final String userId;
+  final String customerId;
   final String? userName;
   final double rating;
   final String? comment;
@@ -10,7 +10,7 @@ class ReviewModel {
   ReviewModel({
     required this.id,
     required this.carId,
-    required this.userId,
+    required this.customerId,
     this.userName,
     required this.rating,
     this.comment,
@@ -21,7 +21,7 @@ class ReviewModel {
     return ReviewModel(
       id: json['id'].toString(),
       carId: json['car_id'].toString(),
-      userId: json['user_id'].toString(),
+      customerId: json['customer_id'].toString(),
       userName: json['user_name'],
       rating: (json['rating'] as num?)?.toDouble() ?? 0,
       comment: json['comment'],

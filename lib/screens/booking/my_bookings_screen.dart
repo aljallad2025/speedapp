@@ -25,13 +25,13 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
   }
 
   Future<void> _load() async {
-    final userId = _authService.currentUser?.id;
-    if (userId == null) {
+    final customerId = await _authService.getCurrentCustomerId();
+    if (customerId == null) {
       setState(() => _loading = false);
       return;
     }
     try {
-      final bookings = await _bookingService.getMyBookingRequests(userId);
+      final bookings = await _bookingService.getMyBookingRequests(customerId);
       setState(() {
         _bookings = bookings;
         _loading = false;

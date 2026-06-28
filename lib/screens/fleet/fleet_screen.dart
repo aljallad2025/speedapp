@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import '../../core/theme.dart';
 import '../../models/car_model.dart';
 import '../../services/car_service.dart';
+import '../../services/booking_service.dart';
 import '../../widgets/car_card.dart';
 import 'car_detail_screen.dart';
+import 'filter_sheet.dart';
 
 class FleetScreen extends StatefulWidget {
   /// 'all' | 'rent' | 'sale' - تقدر توصلها من Home لفتح فلتر معين مباشرة
@@ -16,11 +18,16 @@ class FleetScreen extends StatefulWidget {
 
 class _FleetScreenState extends State<FleetScreen> {
   final CarService _carService = CarService();
+  final BookingService _bookingService = BookingService();
+
   List<CarModel> _cars = [];
   bool _loading = true;
   String? _error;
 
   late String _filter;
+  CarFilters _filters = const CarFilters();
+  Set<String> _bookedCarIds = {};
+  bool _checkingAvailability = false;
 
   @override
   void initState() {
@@ -48,10 +55,93 @@ class _FleetScreenState extends State<FleetScreen> {
     }
   }
 
+  List<String> get _availableLocations {
+    final set = <String>{};
+    for (final c in _cars) {
+      if (c.location != null && c.location!.trim().isNotEmpty) {
+        set.add(c.location!);
+      }
+    }
+    return set.toList()..sort();
+  }
+
+  (double, double) get _priceBounds {
+    final values = <double>[];
+    for (final c in _cars) {
+      if (c.dailyRate != null) values.add(c.dailyRate!);
+      if (c.salePrice != null) values.add(c.salePrice!);
+    }
+    if (values.isEmpty) return (0, 100);
+    var min = values.reduce((a, b) => a < b ? a : b);
+    var max = values.reduce((a, b) => a > b ? a : b);
+    if (min == max) max = min + 50;
+    return (min.floorToDouble(), max.ceilToDouble());
+  }
+
+  Future<void> _openFilters() async {
+    final bounds = _priceBounds;
+    final result = await showCarFiltersSheet(
+      context: context,
+      locations: _availableLocations,
+      priceBoundsMin: bounds.$1,
+      priceBoundsMax: bounds.$2,
+      initial: _filters,
+    );
+    if (result == null) return;
+    setState(() => _filters = result);
+    if (result.dateRange != null) {
+      await _refreshAvailability(result.dateRange!);
+    } else {
+      setState(() => _bookedCarIds = {});
+    }
+  }
+
+  Future<void> _refreshAvailability(DateTimeRange range) async {
+    setState(() => _checkingAvailability = true);
+    try {
+      final ids = await _bookingService.getBookedCarIds(
+        start: range.start,
+        end: range.end,
+      );
+      setState(() {
+        _bookedCarIds = ids.toSet();
+        _checkingAvailability = false;
+      });
+    } catch (_) {
+      setState(() => _checkingAvailability = false);
+    }
+  }
+
+  void _clearAdvancedFilters() {
+    setState(() {
+      _filters = const CarFilters();
+      _bookedCarIds = {};
+    });
+  }
+
   List<CarModel> get _filteredCars {
-    if (_filter == 'all') return _cars;
-    if (_filter == 'rent') return _cars.where((c) => c.isForRent).toList();
-    return _cars.where((c) => c.isForSale).toList();
+    var list = _cars;
+    if (_filter == 'rent') {
+      list = list.where((c) => c.isForRent).toList();
+    } else if (_filter == 'sale') {
+      list = list.where((c) => c.isForSale).toList();
+    }
+
+    if (_filters.location != null) {
+      list = list.where((c) => c.location == _filters.location).toList();
+    }
+    if (_filters.priceRange != null) {
+      final r = _filters.priceRange!;
+      list = list.where((c) {
+        final price = c.dailyRate ?? c.salePrice;
+        if (price == null) return true;
+        return price >= r.start && price <= r.end;
+      }).toList();
+    }
+    if (_filters.dateRange != null) {
+      list = list.where((c) => !_bookedCarIds.contains(c.id)).toList();
+    }
+    return list;
   }
 
   @override
@@ -60,6 +150,30 @@ class _FleetScreenState extends State<FleetScreen> {
       backgroundColor: AppColors.bg,
       appBar: AppBar(
         title: const Text('SPEED'),
+        actions: [
+          IconButton(
+            onPressed: _openFilters,
+            icon: Stack(
+              clipBehavior: Clip.none,
+              children: [
+                const Icon(Icons.tune),
+                if (_filters.activeCount > 0)
+                  Positioned(
+                    top: -2,
+                    right: -2,
+                    child: Container(
+                      width: 9,
+                      height: 9,
+                      decoration: const BoxDecoration(
+                        color: AppColors.speedRed,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ],
       ),
       body: Column(
         children: [
@@ -87,19 +201,48 @@ class _FleetScreenState extends State<FleetScreen> {
               ],
             ),
           ),
+          if (_filters.activeCount > 0)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
+              child: Align(
+                alignment: Alignment.centerRight,
+                child: GestureDetector(
+                  onTap: _clearAdvancedFilters,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: AppColors.speedRed.withOpacity(0.08),
+                      borderRadius: BorderRadius.circular(AppRadius.pill),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text('${_filters.activeCount} فلاتر مفعّلة',
+                            style: const TextStyle(
+                                color: AppColors.speedRed, fontSize: 12, fontWeight: FontWeight.w600)),
+                        const SizedBox(width: 4),
+                        const Icon(Icons.close, size: 14, color: AppColors.speedRed),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
           if (!_loading && _error == null)
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
               child: Align(
                 alignment: Alignment.centerRight,
-                child: Text(
-                  '${_filteredCars.length} سيارة متاحة',
-                  style: const TextStyle(
-                    color: AppColors.textSecondary,
-                    fontSize: 12.5,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
+                child: _checkingAvailability
+                    ? const Text('جاري فحص التوفر...',
+                        style: TextStyle(color: AppColors.textSecondary, fontSize: 12.5))
+                    : Text(
+                        '${_filteredCars.length} سيارة متاحة',
+                        style: const TextStyle(
+                            color: AppColors.textSecondary,
+                            fontSize: 12.5,
+                            fontWeight: FontWeight.w600),
+                      ),
               ),
             ),
           Expanded(
@@ -138,7 +281,7 @@ class _FleetScreenState extends State<FleetScreen> {
                                 Icon(Icons.directions_car_outlined,
                                     size: 44, color: AppColors.greyMedium),
                                 SizedBox(height: 10),
-                                Text('لا توجد سيارات حالياً',
+                                Text('لا توجد سيارات تطابق الفلاتر',
                                     style: TextStyle(color: AppColors.textSecondary)),
                               ],
                             ),

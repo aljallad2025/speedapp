@@ -8,6 +8,7 @@ import '../../services/car_service.dart';
 import '../../services/auth_service.dart';
 import '../../services/favorite_service.dart';
 import '../../services/review_service.dart';
+import '../../widgets/car_card.dart' show areaLabel;
 import '../auth/login_screen.dart';
 import '../booking/booking_screen.dart';
 
@@ -55,12 +56,12 @@ class _CarDetailScreenState extends State<CarDetailScreen> {
       // جدول reviews غير موجود بعد - عادي، نكمل بدون تقييمات
     }
 
-    final userId = _authService.currentUser?.id;
-    if (userId != null) {
+    final customerId = await _authService.getCurrentCustomerId();
+    if (customerId != null) {
       try {
-        isFav = await _favoriteService.isFavorite(userId, widget.carId);
+        isFav = await _favoriteService.isFavorite(customerId, widget.carId);
       } catch (_) {
-        // جدول favorites غير موجود بعد - عادي
+        // المفضلة غير متاحة حالياً - عادي
       }
     }
 
@@ -74,17 +75,17 @@ class _CarDetailScreenState extends State<CarDetailScreen> {
   }
 
   Future<void> _toggleFavorite() async {
-    final userId = _authService.currentUser?.id;
-    if (userId == null) {
+    var customerId = await _authService.getCurrentCustomerId();
+    if (customerId == null) {
       final result = await Navigator.of(context).push(
         MaterialPageRoute(builder: (_) => const LoginScreen()),
       );
       if (result != true) return;
+      customerId = await _authService.getCurrentCustomerId();
     }
-    final uid = _authService.currentUser?.id;
-    if (uid == null) return;
+    if (customerId == null) return;
     try {
-      await _favoriteService.toggleFavorite(uid, widget.carId);
+      await _favoriteService.toggleFavorite(customerId, widget.carId);
       setState(() => _isFavorite = !_isFavorite);
     } catch (_) {
       if (!mounted) return;
@@ -194,8 +195,8 @@ class _CarDetailScreenState extends State<CarDetailScreen> {
                       spacing: 8,
                       runSpacing: 8,
                       children: [
-                        if (car.category != null)
-                          _Tag(icon: Icons.category_outlined, text: car.category!),
+                        if (car.location != null && car.location!.isNotEmpty)
+                          _Tag(icon: Icons.location_on_outlined, text: areaLabel(car.location!)),
                         if (car.transmission != null)
                           _Tag(icon: Icons.settings_outlined, text: car.transmission!),
                         if (car.fuelType != null)
@@ -290,6 +291,12 @@ class _CarDetailScreenState extends State<CarDetailScreen> {
                                   child: Column(
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
+                                      if (r.userName != null && r.userName!.isNotEmpty) ...[
+                                        Text(r.userName!,
+                                            style: const TextStyle(
+                                                fontWeight: FontWeight.w700, fontSize: 12.5)),
+                                        const SizedBox(height: 3),
+                                      ],
                                       Row(
                                         children: List.generate(5, (i) => Icon(
                                               i < r.rating.round() ? Icons.star : Icons.star_border,
@@ -337,7 +344,6 @@ class _CarDetailScreenState extends State<CarDetailScreen> {
   }
 
   Widget _buildActionArea(CarModel car) {
-    // سيارة للإيجار فقط -> Book Now
     if (car.listingType == 'rent') {
       return ElevatedButton(
         onPressed: () => _bookNow(car),
@@ -349,7 +355,6 @@ class _CarDetailScreenState extends State<CarDetailScreen> {
       );
     }
 
-    // سيارة للبيع فقط -> اتصال + واتساب (بدون فلسفة، بسيط)
     if (car.listingType == 'sale') {
       return Row(
         children: [
@@ -375,7 +380,6 @@ class _CarDetailScreenState extends State<CarDetailScreen> {
       );
     }
 
-    // 'both' -> الخيارين
     return Row(
       children: [
         Expanded(
@@ -445,7 +449,6 @@ class _Tag extends StatelessWidget {
   }
 }
 
-/// سلايدر صور احترافي بمؤشرات نقاط + أزرار رجوع/مفضلة عائمة
 class _CarImageHeader extends StatefulWidget {
   final List<String> images;
   final bool isFavorite;
@@ -514,8 +517,6 @@ class _CarImageHeaderState extends State<_CarImageHeader> {
             },
           ),
         ),
-
-        // تظليل خفيف فوق وتحت عشان الأزرار والنقاط تظهر بوضوح فوق أي صورة
         Positioned(
           top: 0,
           left: 0,
@@ -536,8 +537,6 @@ class _CarImageHeaderState extends State<_CarImageHeader> {
             ),
           ),
         ),
-
-        // زر الرجوع
         Positioned(
           top: 14,
           right: 14,
@@ -546,8 +545,6 @@ class _CarImageHeaderState extends State<_CarImageHeader> {
             onTap: widget.onBack,
           ),
         ),
-
-        // زر المفضلة
         Positioned(
           top: 14,
           left: 14,
@@ -557,8 +554,6 @@ class _CarImageHeaderState extends State<_CarImageHeader> {
             onTap: widget.onToggleFavorite,
           ),
         ),
-
-        // نقاط المؤشر
         if (slideCount > 1)
           Positioned(
             bottom: 34,

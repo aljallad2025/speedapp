@@ -1,7 +1,8 @@
 import '../core/supabase_config.dart';
 import '../models/review_model.dart';
 
-/// ⚠️ جدول `reviews` افتراض أعمدته: id, car_id, user_id, rating, comment, created_at
+/// جدول `reviews` الحقيقي: id, customer_id, car_id, rating (integer),
+/// comment, user_name, created_at
 class ReviewService {
   final _client = SupabaseConfig.client;
 
@@ -18,15 +19,17 @@ class ReviewService {
 
   Future<void> addReview({
     required String carId,
-    required String userId,
+    required String customerId,
     required double rating,
     String? comment,
+    String? userName,
   }) async {
     await _client.from('reviews').insert({
       'car_id': carId,
-      'user_id': userId,
-      'rating': rating,
+      'customer_id': customerId,
+      'rating': rating.round(),
       'comment': comment,
+      'user_name': userName,
     });
   }
 

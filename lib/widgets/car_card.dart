@@ -3,6 +3,19 @@ import 'package:cached_network_image/cached_network_image.dart';
 import '../core/theme.dart';
 import '../models/car_model.dart';
 
+String areaLabel(String code) {
+  const map = {
+    'amwaj': 'أمواج',
+    'manama': 'المنامة',
+    'muharraq': 'المحرق',
+    'riffa': 'الرفاع',
+    'seef': 'السيف',
+    'isa town': 'مدينة عيسى',
+    'hamad town': 'مدينة حمد',
+  };
+  return map[code.toLowerCase()] ?? code;
+}
+
 class CarCard extends StatelessWidget {
   final CarModel car;
   final VoidCallback onTap;
@@ -49,7 +62,6 @@ class CarCard extends StatelessWidget {
                                 size: 40, color: AppColors.greyMedium),
                           ),
                   ),
-                  // Bottom gradient for legibility
                   Positioned(
                     left: 0,
                     right: 0,
@@ -105,7 +117,7 @@ class CarCard extends StatelessWidget {
                           : AppColors.rentBadge,
                     ),
                   ),
-                  if (car.category != null)
+                  if (car.location != null && car.location!.isNotEmpty)
                     Positioned(
                       left: 10,
                       bottom: 10,
@@ -116,13 +128,20 @@ class CarCard extends StatelessWidget {
                           color: Colors.black.withOpacity(0.45),
                           borderRadius: BorderRadius.circular(AppRadius.pill),
                         ),
-                        child: Text(
-                          car.category!,
-                          style: const TextStyle(
-                            color: AppColors.white,
-                            fontSize: 11,
-                            fontWeight: FontWeight.w600,
-                          ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(Icons.location_on, size: 11, color: AppColors.white),
+                            const SizedBox(width: 3),
+                            Text(
+                              areaLabel(car.location!),
+                              style: const TextStyle(
+                                color: AppColors.white,
+                                fontSize: 11,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ),

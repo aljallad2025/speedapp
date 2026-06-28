@@ -4,9 +4,6 @@ import '../models/car_model.dart';
 class CarService {
   final _client = SupabaseConfig.client;
 
-  /// يرجع كل السيارات. الفلترة (rent/sale) تصير محلياً بالتطبيق
-  /// عشان عمود listing_type ممكن يكون غير موجود بعد بقاعدة البيانات
-  /// (شغّل migration.sql لو تبي الفلترة الحقيقية).
   Future<List<CarModel>> getCars({String? listingType}) async {
     final response = await _client.from('cars').select();
     final cars = (response as List)
@@ -24,5 +21,20 @@ class CarService {
         await _client.from('cars').select().eq('id', id).maybeSingle();
     if (response == null) return null;
     return CarModel.fromJson(response);
+  }
+
+  /// المناطق الحقيقية الموجودة بقاعدة البيانات (عمود location) - لبناء
+  /// قائمة فلتر المناطق من بيانات فعلية لا قائمة ثابتة بالكود.
+  Future<List<String>> getDistinctLocations() async {
+    final rows = await _client.from('cars').select('location');
+    final set = <String>{};
+    for (final r in (rows as List)) {
+      final loc = r['location'];
+      if (loc != null && loc.toString().trim().isNotEmpty) {
+        set.add(loc.toString());
+      }
+    }
+    final list = set.toList()..sort();
+    return list;
   }
 }

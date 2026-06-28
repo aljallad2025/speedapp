@@ -1,24 +1,25 @@
 import '../core/supabase_config.dart';
 
-/// ⚠️ جدول `favorites` افتراض أعمدته: id, user_id, car_id, created_at
+/// جدول `favorites` الحقيقي: id, customer_id, car_id, created_at
+/// (customer_id يشير لجدول customers، مش لـ auth.users مباشرة)
 class FavoriteService {
   final _client = SupabaseConfig.client;
 
-  Future<bool> isFavorite(String userId, String carId) async {
+  Future<bool> isFavorite(String customerId, String carId) async {
     final row = await _client
         .from('favorites')
         .select('id')
-        .eq('user_id', userId)
+        .eq('customer_id', customerId)
         .eq('car_id', carId)
         .maybeSingle();
     return row != null;
   }
 
-  Future<void> toggleFavorite(String userId, String carId) async {
+  Future<void> toggleFavorite(String customerId, String carId) async {
     final existing = await _client
         .from('favorites')
         .select('id')
-        .eq('user_id', userId)
+        .eq('customer_id', customerId)
         .eq('car_id', carId)
         .maybeSingle();
 
@@ -27,15 +28,15 @@ class FavoriteService {
     } else {
       await _client
           .from('favorites')
-          .insert({'user_id': userId, 'car_id': carId});
+          .insert({'customer_id': customerId, 'car_id': carId});
     }
   }
 
-  Future<List<String>> getFavoriteCarIds(String userId) async {
+  Future<List<String>> getFavoriteCarIds(String customerId) async {
     final rows = await _client
         .from('favorites')
         .select('car_id')
-        .eq('user_id', userId);
+        .eq('customer_id', customerId);
     return (rows as List).map((r) => r['car_id'].toString()).toList();
   }
 }
