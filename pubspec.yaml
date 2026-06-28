@@ -1,4 +1,4 @@
-name: speed_car_rental
+﻿name: speed_car_rental
 description: SPEED Car Rental & Sales - Bahrain
 publish_to: 'none'
 version: 1.0.0+1
@@ -10,13 +10,12 @@ dependencies:
   flutter:
     sdk: flutter
 
-  # Backend
-  supabase_flutter: ^2.5.6
+  flutter_localizations:
+    sdk: flutter
 
-  # State management
+  supabase_flutter: ^2.5.6
   provider: ^6.1.2
 
-  # UI / UX
   cached_network_image: ^3.3.1
   google_fonts: ^6.2.1
   flutter_svg: ^2.0.10+1
@@ -24,7 +23,6 @@ dependencies:
   carousel_slider: ^4.2.1
   smooth_page_indicator: ^1.1.0
 
-  # Utilities
   url_launcher: ^6.2.6
   intl: ^0.19.0
   shared_preferences: ^2.2.3
@@ -40,13 +38,5 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
-
   assets:
     - assets/images/
-
-  # fonts:
-  #   - family: Cairo
-  #     fonts:
-  #       - asset: assets/fonts/Cairo-Regular.ttf
-  #       - asset: assets/fonts/Cairo-Bold.ttf
-  #         weight: 700

@@ -1,5 +1,6 @@
-import 'dart:async';
+﻿import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'core/supabase_config.dart';
 import 'core/theme.dart';
 import 'screens/splash_screen.dart';
@@ -8,7 +9,6 @@ void main() {
   runZonedGuarded(() async {
     WidgetsFlutterBinding.ensureInitialized();
 
-    // أي خطأ يصير أثناء بناء أي شاشة (build) يطلع نص أحمر بدل صفحة بيضاء
     ErrorWidget.builder = (FlutterErrorDetails details) {
       return Material(
         color: Colors.white,
@@ -38,7 +38,6 @@ void main() {
 
     runApp(const SpeedApp());
   }, (error, stack) {
-    // أي خطأ غير متوقع (حتى لو async وبعيد عن مرحلة البناء) يطلع هنا
     runApp(_ErrorApp(message: 'خطأ غير متوقع:\n$error\n\n$stack'));
   });
 }
@@ -78,6 +77,11 @@ class SpeedApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light,
       locale: const Locale('ar'),
+      localizationsDelegates: const [
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
       supportedLocales: const [Locale('ar'), Locale('en')],
       home: const SplashScreen(),
     );
