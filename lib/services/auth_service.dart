@@ -1,14 +1,9 @@
-import 'package:supabase_flutter/supabase_flutter.dart';
+﻿import 'package:supabase_flutter/supabase_flutter.dart';
 import '../core/supabase_config.dart';
 import '../models/app_user_model.dart';
 
-/// ⚠️ الحسابات بالموبايل مرتبطة بجدول `customers` الحقيقي بالـ ERP
-/// (عمود customers.auth_user_id) - مش جدول users منفصل.
-/// لو العميل موجود مسبقاً بالـ ERP (نفس الهاتف أو الإيميل) بنربطه بحسابه
-/// الجديد بالموبايل بدل ما ننشئ عميل مكرر.
 class AuthService {
   final _client = SupabaseConfig.client;
-
   static String? _cachedCustomerId;
 
   bool get isLoggedIn => _client.auth.currentUser != null;
@@ -27,12 +22,12 @@ class AuthService {
     required String fullName,
     String? phone,
   }) async {
-    final response = await _client.auth.signUp(
+    await _client.auth.signUp(email: email, password: password);
+    final loginResponse = await _client.auth.signInWithPassword(
       email: email,
       password: password,
     );
-
-    final userId = response.user?.id;
+    final userId = loginResponse.user?.id;
     if (userId != null) {
       await _linkOrCreateCustomer(
         authUserId: userId,
@@ -41,13 +36,9 @@ class AuthService {
         phone: phone,
       );
     }
-
-    return response;
+    return loginResponse;
   }
 
-  /// يدور على عميل موجود مسبقاً بالـ ERP بنفس الهاتف/الإيميل (عميل قديم
-  /// زائر بالمحل مثلاً)، ولو لقاه بربطه بحساب الموبايل الجديد، ولو ما لقاه
-  /// بنشئ سجل customer جديد ومربوط مباشرة.
   Future<void> _linkOrCreateCustomer({
     required String authUserId,
     required String fullName,
@@ -55,7 +46,6 @@ class AuthService {
     String? phone,
   }) async {
     Map<String, dynamic>? existing;
-
     if (phone != null && phone.isNotEmpty) {
       existing = await _client
           .from('customers')
@@ -63,7 +53,6 @@ class AuthService {
           .eq('phone', phone)
           .maybeSingle();
     }
-
     existing ??= email.isNotEmpty
         ? await _client
             .from('customers')
@@ -71,7 +60,6 @@ class AuthService {
             .eq('email', email)
             .maybeSingle()
         : null;
-
     if (existing != null) {
       await _client
           .from('customers')
@@ -92,14 +80,10 @@ class AuthService {
     _cachedCustomerId = null;
   }
 
-  /// معرّف العميل الحقيقي بالـ ERP (customers.id) المرتبط بحساب الموبايل
-  /// الحالي - هذا هو المعرّف يلي لازم يستخدم بكل مكان (مفضلة، تقييمات،
-  /// طلبات حجز) بدل auth.uid مباشرة.
   Future<String?> getCurrentCustomerId() async {
     final uid = currentUser?.id;
     if (uid == null) return null;
     if (_cachedCustomerId != null) return _cachedCustomerId;
-
     final row = await _client
         .from('customers')
         .select('id')
