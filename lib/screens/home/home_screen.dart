@@ -1,6 +1,5 @@
 ﻿import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-
 import '../../core/theme.dart';
 import '../../models/car_model.dart';
 import '../../services/car_service.dart';
@@ -19,6 +18,7 @@ class _HomeScreenState extends State<HomeScreen> {
   List<CarModel> _saleCars = [];
   bool _loading = true;
   String? _error;
+  int _sliderIndex = 0;
 
   @override
   void initState() {
@@ -35,15 +35,19 @@ class _HomeScreenState extends State<HomeScreen> {
         _loading = false;
       });
     } catch (e) {
-      setState(() { _error = e.toString(); _loading = false; });
+      setState(() {
+        _error = e.toString();
+        _loading = false;
+      });
     }
   }
 
-  void _goToFleet({String? filter}) {
+  void _goToFleet({String filter = ''}) {
     Navigator.of(context).push(MaterialPageRoute(
       builder: (_) => FleetScreen(initialFilter: filter),
     ));
   }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -61,7 +65,8 @@ class _HomeScreenState extends State<HomeScreen> {
               title: Row(
                 children: [
                   Container(
-                    width: 36, height: 36,
+                    width: 36,
+                    height: 36,
                     decoration: BoxDecoration(
                       color: Colors.white.withOpacity(0.2),
                       borderRadius: BorderRadius.circular(10),
@@ -69,10 +74,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     child: const Icon(Icons.directions_car_filled, color: Colors.white, size: 20),
                   ),
                   const SizedBox(width: 10),
-                  const Text('SPEED', style: TextStyle(
-                    color: Colors.white, fontSize: 22,
-                    fontWeight: FontWeight.w900, letterSpacing: 2,
-                  )),
+                  const Text('SPEED', style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.w900, letterSpacing: 2)),
                 ],
               ),
               actions: [
@@ -104,6 +106,7 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     );
   }
+
   Widget _buildSlider() {
     if (_loading) {
       return Container(
@@ -113,97 +116,85 @@ class _HomeScreenState extends State<HomeScreen> {
     }
     final sliderCars = _featuredCars.take(5).toList();
     if (sliderCars.isEmpty) {
-      return Container(
-        height: 190,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16),
-          gradient: LinearGradient(colors: [AppColors.speedRedDark, AppColors.speedRed]),
-        ),
-        padding: const EdgeInsets.all(22),
-        child: const Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text('Rent Premium Cars', style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.w900)),
-            SizedBox(height: 8),
-            Text('Best prices in Bahrain', style: TextStyle(color: Colors.white70, fontSize: 14)),
-          ],
-        ),
-      );
+      return _staticBanner();
     }
-    return SizedBox(height: 190, child: PageView(
-      
-      children: sliderCars.map((car) {
-        return GestureDetector(
-          onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => CarDetailScreen(carId: car.id))),
-          child: Stack(
-            children: [
-              ClipRRect(
-                borderRadius: BorderRadius.circular(16),
-                child: car.images.isNotEmpty
-                    ? CachedNetworkImage(
-                        imageUrl: car.images.first,
-                        width: double.infinity, height: 190,
-                        fit: BoxFit.cover,
-                        
-                      )
-                    : Container(
-                        height: 190,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(16),
-                          gradient: LinearGradient(colors: [AppColors.speedRedDark, AppColors.speedRed]),
-                        ),
-                      ),
-              ),
-              Container(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(16),
-                  gradient: LinearGradient(
-                    begin: Alignment.centerLeft,
-                    end: Alignment.centerRight,
-                    colors: [Colors.black.withOpacity(0.6), Colors.transparent],
+    return SizedBox(
+      height: 190,
+      child: PageView.builder(
+        itemCount: sliderCars.length,
+        onPageChanged: (i) => setState(() => _sliderIndex = i),
+        itemBuilder: (context, index) {
+          final car = sliderCars[index];
+          return GestureDetector(
+            onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => CarDetailScreen(carId: car.id))),
+            child: Container(
+              margin: const EdgeInsets.symmetric(horizontal: 2),
+              decoration: BoxDecoration(borderRadius: BorderRadius.circular(16)),
+              child: Stack(
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(16),
+                    child: car.images.isNotEmpty
+                        ? CachedNetworkImage(imageUrl: car.images.first, width: double.infinity, height: 190, fit: BoxFit.cover)
+                        : Container(height: 190, decoration: BoxDecoration(borderRadius: BorderRadius.circular(16), gradient: LinearGradient(colors: [AppColors.speedRedDark, AppColors.speedRed]))),
                   ),
-                ),
+                  Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(16),
+                      gradient: LinearGradient(begin: Alignment.centerLeft, end: Alignment.centerRight, colors: [Colors.black.withOpacity(0.6), Colors.transparent]),
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.all(22),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                          decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), borderRadius: BorderRadius.circular(20)),
+                          child: Text(car.isForSale ? 'For Sale' : 'For Rent', style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w700)),
+                        ),
+                        const SizedBox(height: 10),
+                        Text(car.displayName, style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.w900)),
+                        const SizedBox(height: 6),
+                        Text(
+                          car.isForRent && car.dailyRate != null ? 'BD ${car.dailyRate!.toStringAsFixed(0)} / day' : car.salePrice != null ? 'BD ${car.salePrice!.toStringAsFixed(0)}' : '',
+                          style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w700),
+                        ),
+                        const SizedBox(height: 14),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 9),
+                          decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20)),
+                          child: Text('View Details', style: TextStyle(color: AppColors.speedRedDark, fontSize: 13, fontWeight: FontWeight.w700)),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
-              Padding(
-                padding: const EdgeInsets.all(22),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.2),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Text(car.isForSale ? 'For Sale' : 'For Rent',
-                          style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w700)),
-                    ),
-                    const SizedBox(height: 10),
-                    Text(car.displayName,
-                        style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.w900)),
-                    const SizedBox(height: 6),
-                    Text(
-                      car.isForRent && car.dailyRate != null
-                          ? 'BD ${car.dailyRate!.toStringAsFixed(0)} / day'
-                          : car.salePrice != null ? 'BD ${car.salePrice!.toStringAsFixed(0)}' : '',
-                      style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w700),
-                    ),
-                    const SizedBox(height: 14),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 9),
-                      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20)),
-                      child: Text('View Details',
-                          style: TextStyle(color: AppColors.speedRedDark, fontSize: 13, fontWeight: FontWeight.w700)),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        );
-      }).toList()),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _staticBanner() {
+    return Container(
+      height: 190,
+      decoration: BoxDecoration(borderRadius: BorderRadius.circular(16), gradient: LinearGradient(colors: [AppColors.speedRedDark, AppColors.speedRed])),
+      padding: const EdgeInsets.all(22),
+      child: const Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text('Rent Premium Cars', style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.w900)),
+          SizedBox(height: 8),
+          Text('Best prices in Bahrain', style: TextStyle(color: Colors.white70, fontSize: 14)),
+        ],
+      ),
+    );
   }
 
   Widget _buildCategories() {
@@ -252,12 +243,7 @@ class _HomeScreenState extends State<HomeScreen> {
               separatorBuilder: (_, __) => const SizedBox(width: 12),
               itemBuilder: (context, index) {
                 final car = cars[index];
-                return _FeaturedCard(
-                  car: car,
-                  onTap: () => Navigator.of(context).push(
-                    MaterialPageRoute(builder: (_) => CarDetailScreen(carId: car.id)),
-                  ),
-                );
+                return _FeaturedCard(car: car, onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => CarDetailScreen(carId: car.id))));
               },
             ),
           ),
@@ -282,11 +268,7 @@ class _CategoryItem extends StatelessWidget {
             width: 56, height: 56,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: AppColors.heroGradient,
-              ),
+              gradient: LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: AppColors.heroGradient),
               boxShadow: [BoxShadow(color: AppColors.speedRed.withOpacity(0.25), blurRadius: 10, offset: const Offset(0, 5))],
             ),
             child: Icon(icon, color: AppColors.white, size: 24),
@@ -310,12 +292,7 @@ class _FeaturedCard extends StatelessWidget {
       onTap: onTap,
       child: Container(
         width: 150,
-        decoration: BoxDecoration(
-          color: AppColors.white,
-          borderRadius: BorderRadius.circular(AppRadius.lg),
-          border: Border.all(color: AppColors.border),
-          boxShadow: AppShadows.soft,
-        ),
+        decoration: BoxDecoration(color: AppColors.white, borderRadius: BorderRadius.circular(AppRadius.lg), border: Border.all(color: AppColors.border), boxShadow: AppShadows.soft),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -334,12 +311,8 @@ class _FeaturedCard extends StatelessWidget {
                   top: 8, right: 8,
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: car.isForSale ? AppColors.saleBadge : AppColors.rentBadge,
-                      borderRadius: BorderRadius.circular(AppRadius.pill),
-                    ),
-                    child: Text(car.isForSale ? 'Sale' : 'Rent',
-                        style: const TextStyle(color: AppColors.white, fontSize: 9.5, fontWeight: FontWeight.bold)),
+                    decoration: BoxDecoration(color: car.isForSale ? AppColors.saleBadge : AppColors.rentBadge, borderRadius: BorderRadius.circular(AppRadius.pill)),
+                    child: Text(car.isForSale ? 'Sale' : 'Rent', style: const TextStyle(color: AppColors.white, fontSize: 9.5, fontWeight: FontWeight.bold)),
                   ),
                 ),
               ],
@@ -349,13 +322,10 @@ class _FeaturedCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(car.displayName, maxLines: 1, overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
+                  Text(car.displayName, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
                   const SizedBox(height: 4),
                   Text(
-                    car.isForRent && car.dailyRate != null
-                        ? 'BD ${car.dailyRate!.toStringAsFixed(0)} / day'
-                        : car.salePrice != null ? 'BD ${car.salePrice!.toStringAsFixed(0)}' : '',
+                    car.isForRent && car.dailyRate != null ? 'BD ${car.dailyRate!.toStringAsFixed(0)} / day' : car.salePrice != null ? 'BD ${car.salePrice!.toStringAsFixed(0)}' : '',
                     style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w800, color: AppColors.speedRed),
                   ),
                 ],
