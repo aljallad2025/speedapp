@@ -29,7 +29,7 @@ class _LoginScreenState extends State<LoginScreen> {
     try {
       await _authService.signIn(
         email: _emailController.text.trim(),
-        password: _passwordController.text,
+        password: _passwordController.text.trim(),
       );
       if (!mounted) return;
       Navigator.of(context).pop(true);
