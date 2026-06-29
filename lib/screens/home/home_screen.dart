@@ -1,6 +1,6 @@
 ﻿import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:carousel_slider/carousel_slider.dart';
+
 import '../../core/theme.dart';
 import '../../models/car_model.dart';
 import '../../services/car_service.dart';
@@ -28,7 +28,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _load() async {
     try {
-      final all = await _carService.fetchCars();
+      final all = await _carService.getCars();
       setState(() {
         _featuredCars = all.where((c) => c.isForRent).take(10).toList();
         _saleCars = all.where((c) => c.isForSale).take(10).toList();
@@ -131,13 +131,9 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
       );
     }
-    return CarouselSlider(
-      options: CarouselOptions(
-        height: 190, autoPlay: true,
-        autoPlayInterval: const Duration(seconds: 4),
-        viewportFraction: 1.0,
-      ),
-      items: sliderCars.map((car) {
+    return SizedBox(height: 190, child: PageView(
+      
+      children: sliderCars.map((car) {
         return GestureDetector(
           onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => CarDetailScreen(carId: car.id))),
           child: Stack(
@@ -149,7 +145,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         imageUrl: car.images.first,
                         width: double.infinity, height: 190,
                         fit: BoxFit.cover,
-                        colorFilter: ColorFilter.mode(Colors.black.withOpacity(0.45), BlendMode.darken),
+                        
                       )
                     : Container(
                         height: 190,
@@ -207,8 +203,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ],
           ),
         );
-      }).toList(),
-    );
+      }).toList()),
   }
 
   Widget _buildCategories() {
